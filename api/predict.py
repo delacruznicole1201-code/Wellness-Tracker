@@ -7,6 +7,15 @@ app = Flask(__name__)
 # Load trained model
 model = joblib.load("mental_health_model.pkl")
 
+# ✅ Label Mapping (model output → text label)
+label_map = {
+    0: "Normal",
+    1: "Stress",
+    2: "Burnout",
+    3: "Anxiety",
+    4: "Depression"
+}
+
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
@@ -24,9 +33,12 @@ def predict():
             return jsonify({"error": "All inputs must be numeric"}), 400
 
         features = np.array(numeric_inputs).reshape(1, -1)
-        prediction = int(model.predict(features)[0])  # ensure int output
+        prediction = int(model.predict(features)[0])
 
-        return jsonify({"prediction": prediction}), 200
+        # ✅ Convert numeric prediction to label text
+        result_label = label_map.get(prediction, "Unknown Result")
+
+        return jsonify({"prediction": result_label}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
